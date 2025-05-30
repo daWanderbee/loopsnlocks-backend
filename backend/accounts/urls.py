@@ -9,4 +9,6 @@ urlpatterns = [
     path('logout/', views.logout_view, name='logout'),
     path('check-username/', views.check_username, name='check_username'),
     path("whoami/", views.whoami, name="whoami"),
+    path('make-creator/', views.make_creator, name='make-creator'),
+    path('is_creator/', views.is_creator_view, name='is_creator'),
 ]

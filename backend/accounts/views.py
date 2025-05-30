@@ -5,10 +5,9 @@ from django.utils import timezone
 from django.core.mail import send_mail
 from django.views.decorators.csrf import csrf_exempt
 from django.http import JsonResponse
-from django.contrib.auth import authenticate, login
-from .models import CustomUser  # your custom user model
-from django.contrib.auth import logout
+from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.decorators import login_required
+from .models import CustomUser  # your custom user model
 
 @csrf_exempt
 def request_otp_signup(request):
@@ -150,22 +149,47 @@ def logout_view(request):
     else:
         return JsonResponse({'error': 'Invalid request method'}, status=405)
 
+@csrf_exempt
 def check_username(request):
     username = request.GET.get('username', '').strip()
     if not username:
         return JsonResponse({'error': 'Username parameter is required'}, status=400)
-    
+
     is_taken = CustomUser.objects.filter(username=username).exists()
     return JsonResponse({'available': not is_taken})
 
+@csrf_exempt
 def whoami(request):
     if request.user.is_authenticated:
         return JsonResponse({
             "is_authenticated": True,
             "username": request.user.username,
             "email": request.user.email,
+            "role": request.user.role,
         })
     else:
         return JsonResponse({
             "is_authenticated": False,
         }, status=200)  # 200 is okay here — no redirect
+
+@csrf_exempt
+def make_creator(request):
+    if request.method == "POST":
+        try:
+            data = json.loads(request.body)
+            email = data.get("email")
+            user = CustomUser.objects.get(email=email)
+            user.role = "creator"
+            user.save()
+            return JsonResponse({"message": f"{user.username} is now a creator."})
+        except CustomUser.DoesNotExist:
+            return JsonResponse({"error": "User not found"}, status=404)
+        except Exception as e:
+            return JsonResponse({"error": str(e)}, status=500)
+    return JsonResponse({"error": "Invalid request method"}, status=405)
+
+@login_required
+def is_creator_view(request):
+    user = request.user
+    is_creator = (user.role == "creator")
+    return JsonResponse({"is_creator": is_creator})

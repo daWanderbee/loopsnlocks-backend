@@ -26,10 +26,15 @@ class CustomUser(AbstractBaseUser, PermissionsMixin):
     is_active = models.BooleanField(default=True)
     is_staff = models.BooleanField(default=False)
 
+    ROLE_CHOICES = [
+        ('creator', 'Creator'),
+        ('learner', 'Learner'),
+    ]
     # ➕ Custom fields
     otp = models.CharField(max_length=6, blank=True, null=True)
     otp_expiry = models.DateTimeField(blank=True, null=True)
     is_verified = models.BooleanField(default=False) 
+    role = models.CharField(max_length=50, default='learner',choices=ROLE_CHOICES )  # e.g., 'admin', 'user', etc.
 
     # Required fields
     USERNAME_FIELD = 'email'
